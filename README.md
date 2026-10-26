@@ -65,22 +65,6 @@
 | `https://*.hdslb.com/*` | B 站静态资源域 |
 | `https://gemini.google.com/*` | 与 Gemini 网页版交互 |
 
-## 项目结构
-
-```
-bili-gemini/
-├── manifest.json           # 扩展配置（Manifest V3）
-├── background.js           # Service Worker，负责跨页面消息转发
-├── content-bilibili.js     # B 站视频页内容脚本，抓取数据并触发总结
-├── content-feed.js         # B 站动态页内容脚本，注入官方 AI 总结
-├── content-gemini.js       # Gemini 页面内容脚本，自动填入 prompt
-├── inject-subtitle-hook.js # 主世界脚本，拦截播放器 AI 字幕
-├── popup.html / popup.js   # 扩展弹窗设置页
-├── mindmap.html / mindmap.js # 思维导图展示页
-├── md5.min.js              # MD5 工具库
-└── vendor/                 # 第三方依赖（d3、markmap）
-```
-
 ## 免责声明
 
 - 本扩展仅作为浏览器辅助工具，所有 AI 总结内容均由对应 AI 服务生成，不代表本扩展立场。
