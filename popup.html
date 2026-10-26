@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { width: 240px; margin: 0; padding: 12px 14px; font: 13px/1.6 "Segoe UI", system-ui, sans-serif; background: #fff; color: #18191c; }
+  h1 { font-size: 14px; margin: 0 0 8px; }
+  .row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+  .row .label { flex: 1; cursor: default; }
+  .quota { color: #f25d8e; font-size: 12px; }
+  .switch { position: relative; width: 34px; height: 20px; flex: none; }
+  .switch input { display: none; }
+  .slider { position: absolute; inset: 0; background: #ccc; border-radius: 10px; transition: .15s; cursor: pointer; }
+  .slider::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: .15s; }
+  .switch input:checked + .slider { background: #00a1d6; }
+  .switch input:checked + .slider::before { transform: translateX(14px); }
+  .divider { border-top: 1px solid #e3e5e7; margin: 8px 0; }
+  .sec-title { color: #9499a0; font-size: 12px; margin-bottom: 2px; }
+  .provider { display: flex; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 6px; cursor: pointer; }
+  .provider:hover { background: rgba(0, 0, 0, .05); }
+  .provider .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #ccc; flex: none; box-sizing: border-box; }
+  .provider.sel .dot { border-color: #00a1d6; background: #00a1d6; }
+  .provider .soon { margin-left: auto; color: #9499a0; font-size: 11px; }
+  #toast { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); background: rgba(0, 0, 0, .75); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 12px; opacity: 0; transition: opacity .15s; pointer-events: none; white-space: nowrap; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1f1f1f; color: #e7e7e7; }
+    .divider { border-top-color: #444; }
+    .provider:hover { background: rgba(255, 255, 255, .08); }
+  }
+</style>
+</head>
+<body>
+  <h1>B站总结助手</h1>
+  <div class="row" title="每日有次数限制">
+    <span class="label">B站官方AI预览<span id="quotaNote" class="quota" hidden>（次数耗尽）</span></span>
+    <label class="switch"><input type="checkbox" id="feedSummary"><span class="slider"></span></label>
+  </div>
+  <div class="row">
+    <span class="label">一键总结（总结到 Gemini）</span>
+    <label class="switch"><input type="checkbox" id="quickSummary"><span class="slider"></span></label>
+  </div>
+  <div class="divider"></div>
+  <div class="row">
+    <span class="label">新开对话</span>
+    <label class="switch"><input type="checkbox" id="newConversation" aria-label="新开对话" disabled><span class="slider"></span></label>
+  </div>
+  <div style="font-size:12px;color:#9499a0;margin-bottom:8px">开启：视频分别总结；关闭：沿用小窗当前对话。</div>
+  <div class="row">
+    <span class="label">固定模型</span>
+    <label class="switch"><input type="checkbox" id="fixedModel" aria-label="固定模型" disabled><span class="slider"></span></label>
+  </div>
+  <div style="font-size:12px;color:#9499a0;margin-bottom:8px">开启：切换到 3.5 Flash-Lite；关闭：用当前模型直接发送，更快开始。</div>
+  <div class="sec-title">AI 小窗</div>
+  <div id="providers"></div>
+  <div id="toast"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

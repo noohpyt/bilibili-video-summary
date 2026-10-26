@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>思维导图</title>
+<style id="mindmap-style">
+  /* ---- 页面骨架：主题变量 ---- */
+  body { --mm-bg: #f5f6f7; --mm-bar-bg: #ffffff; --mm-bar-border: #e0e0e0; --mm-btn-bg: #eceef1; --mm-btn-hover: #dfe3e8; --mm-btn-text: #333; --mm-title: #333; --mm-select: #2f2f2f; }
+  body.dark { --mm-bg: #18191c; --mm-bar-bg: #232328; --mm-bar-border: #333; --mm-btn-bg: #3a3a3a; --mm-btn-hover: #4a4a4a; --mm-btn-text: #e7e7e7; --mm-title: #e7e7e7; --mm-select: #ffffff; }
+  html, body { margin: 0; height: 100%; background: var(--mm-bg); font-family: system-ui, "Microsoft YaHei", sans-serif; }
+  #bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--mm-bar-bg); border-bottom: 1px solid var(--mm-bar-border); }
+  #title { flex: 1; color: var(--mm-title); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #bar button { padding: 5px 12px; border: none; border-radius: 12px; background: var(--mm-btn-bg); color: var(--mm-btn-text); font-size: 13px; cursor: pointer; }
+  #bar button:hover:not(:disabled) { background: var(--mm-btn-hover); }
+  #bar button:disabled { opacity: .4; cursor: default; }
+  #mm { width: 100%; height: calc(100% - 42px); display: block; }
+  /* 行内编辑态：虚线描边提示可编辑 */
+  .markmap-foreign [contenteditable="true"] { outline: 2px dashed rgba(255,255,255,.75); outline-offset: 1px; min-width: 40px; }
+  /* 空节点（Enter/Tab 新建）编辑态的占位提示；全删成空后浏览器会留 <br> 导致 :empty 失效，无碍提交判空 */
+  .markmap-foreign [contenteditable="true"]:empty::before { content: '输入内容'; color: rgba(255,255,255,.6); pointer-events: none; }
+  /* 快捷键说明：左上角固定小字半透明，点一下收起成图标 */
+  #help { position: fixed; left: 10px; top: 50px; z-index: 5; background: var(--mm-bar-bg); color: var(--mm-title); opacity: .55; border-radius: 8px; padding: 6px 10px; font-size: 11px; line-height: 1.7; cursor: pointer; user-select: none; }
+  #help:hover { opacity: .9; }
+  #help.collapsed { padding: 4px 8px; }
+  #help.collapsed .help-list { display: none; }
+
+  /* ---- markmap 节点：填充色圆角矩形 + 白字（经典横版样式） ----
+     分支色由内联 CSS 变量 --branch-color 提供（mindmap.js 按 data-path 设置），
+     导出 PNG 时这段 CSS 会随 SVG 一起序列化，注意别依赖 body 选择器。 */
+  .markmap-node > line { stroke: none; } /* 去掉默认文字下划线，色块本身承载分支色 */
+  .markmap-node > circle { fill: #fff; stroke-width: 2; }
+  /* foreignObject 的 UA 默认 overflow:hidden 会把尺寸略大于其的内容连同选中描边
+     （outline 画在色块外侧 3~6px）一起裁掉，必须放开，否则选中框/文字缺边 */
+  .markmap-foreign { overflow: visible; }
+  .markmap-foreign > div > div {
+    background: var(--branch-color, #888);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    cursor: pointer;
+  }
+  /* 字号层级：根大、逐级略小 */
+  .markmap-node[data-depth="1"] .markmap-foreign > div > div { font-size: 20px; font-weight: 700; padding: 8px 16px; border-radius: 10px; }
+  .markmap-node[data-depth="2"] .markmap-foreign > div > div { font-size: 16px; font-weight: 600; }
+  .markmap-node[data-depth="3"] .markmap-foreign > div > div { font-size: 14px; }
+  .markmap-node[data-depth="4"] .markmap-foreign > div > div,
+  .markmap-node[data-depth="5"] .markmap-foreign > div > div,
+  .markmap-node[data-depth="6"] .markmap-foreign > div > div { font-size: 13px; }
+  /* 选中高亮：明显圆角描边，日间深色/夜间白色（--mm-select），与色块间留 3px 间隙。
+     选中态用 data-mm-selected 属性而非 class：markmap 每次重渲染都会重置 g 的 class
+     属性（mmGMerge.attr("class", ...)），class 会被抹掉，自定义属性不受影响 */
+  .markmap-node[data-mm-selected] .markmap-foreign > div > div { outline: 3px solid var(--mm-select, #2f2f2f); outline-offset: 3px; border-radius: 10px; }
+</style>
+</head>
+<body>
+<div id="bar">
+  <span id="title" title="快捷键：方向键导航，Enter 加同级，Tab 加子级，F2/双击/Space 编辑，Delete 删除，- 折叠，Ctrl+Z/Y 撤销重做">🧠 思维导图</span>
+  <button id="edit" title="F2 / 双击 / Space" disabled>编辑</button>
+  <button id="addsib" title="Enter" disabled>添加同级</button>
+  <button id="add" title="Tab" disabled>添加子节点</button>
+  <button id="del" title="Delete" disabled>删除</button>
+  <button id="export">导出PNG</button>
+  <button id="exportSvg">导出SVG</button>
+  <button id="restore" title="放弃所有编辑，回到 Gemini 生成的原始内容" style="display:none">还原原始内容</button>
+  <button id="fullpage" title="在新标签页打开完整编辑版" style="display:none">✏️ 去编辑</button>
+  <button id="refit">重新适配</button>
+  <button id="theme" title="切换日间/夜间">🌙</button>
+</div>
+<div id="help" title="点击收起/展开"><b>?</b><div class="help-list"></div></div>
+<svg id="mm"></svg>
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/markmap-view.js"></script>
+<script src="mindmap.js?v=0.9.9"></script>
+</body>
+</html>

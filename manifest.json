@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "B站视频一键总结到 Gemini",
+  "version": "0.9.17",
+  "description": "在 B 站视频页一键抓取字幕/弹幕，连同 prompt 自动发送到 Gemini 网页版小窗（走账号网页额度），回答直接在小窗里查看；动态页视频卡片左侧默认显示 B 站官方 AI 总结。",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "B站总结助手"
+  },
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting",
+    "system.display"
+  ],
+  "host_permissions": [
+    "https://*.bilibili.com/*",
+    "https://*.hdslb.com/*",
+    "https://gemini.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.bilibili.com/video/*"
+      ],
+      "js": [
+        "inject-subtitle-hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.bilibili.com/video/*"
+      ],
+      "js": [
+        "content-bilibili.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://t.bilibili.com/*"
+      ],
+      "js": [
+        "md5.min.js",
+        "content-feed.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://gemini.google.com/*"
+      ],
+      "js": [
+        "content-gemini.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
